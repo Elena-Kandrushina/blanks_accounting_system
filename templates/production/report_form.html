@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Создание отчета - Система учета{% endblock %}
+
+{% block page_title %}Создание отчета о сборке{% endblock %}
+
+{% block page_actions %}
+    <a href="{% url 'production:report_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Назад к списку
+    </a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Новый отчет о сборке</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                    {% endif %}
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {{ form.product.label }}
+                                {% if form.product.field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {% if form.product.errors %}
+                            <div class="alert alert-danger py-1">{{ form.product.errors }}</div>
+                            {% endif %}
+                            {{ form.product }}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {{ form.production_site.label }}
+                                {% if form.production_site.field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {% if form.production_site.errors %}
+                            <div class="alert alert-danger py-1">{{ form.production_site.errors }}</div>
+                            {% endif %}
+                            {{ form.production_site }}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {{ form.quantity.label }}
+                                {% if form.quantity.field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {% if form.quantity.errors %}
+                            <div class="alert alert-danger py-1">{{ form.quantity.errors }}</div>
+                            {% endif %}
+                            {{ form.quantity }}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {{ form.defect_quantity.label }}
+                            </label>
+                            {% if form.defect_quantity.errors %}
+                            <div class="alert alert-danger py-1">{{ form.defect_quantity.errors }}</div>
+                            {% endif %}
+                            {{ form.defect_quantity }}
+                            <div class="form-text">Количество бракованных изделий</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {{ form.report_date.label }}
+                            {% if form.report_date.field.required %}<span class="text-danger">*</span>{% endif %}
+                        </label>
+                        {% if form.report_date.errors %}
+                        <div class="alert alert-danger py-1">{{ form.report_date.errors }}</div>
+                        {% endif %}
+                        {{ form.report_date }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {{ form.comment.label }}
+                        </label>
+                        {% if form.comment.errors %}
+                        <div class="alert alert-danger py-1">{{ form.comment.errors }}</div>
+                        {% endif %}
+                        {{ form.comment }}
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Важно!</strong> При создании отчета заготовки будут автоматически списаны с участка согласно нормам расхода.
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-save"></i> Создать отчет
+                        </button>
+                        <a href="{% url 'production:report_list' %}" class="btn btn-outline-secondary">
+                            Отмена
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Движение {{ movement.number }} - Система учета{% endblock %}
+
+{% block page_title %}Движение: {{ movement.number }}{% endblock %}
+
+{% block page_actions %}
+    <a href="{% url 'warehouse:movement_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Назад к списку
+    </a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header {% if movement.movement_type == 'receipt' %}bg-success{% elif movement.movement_type == 'write_off' %}bg-danger{% elif movement.movement_type == 'transfer' %}bg-info{% else %}bg-secondary{% endif %} text-white">
+                <h5 class="mb-0">Детали движения</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th style="width: 30%">Номер документа:</th>
+                        <td><strong>{{ movement.number }}</strong></td>
+                    </tr>
+                    <tr>
+                        <th>Тип движения:</th>
+                        <td>
+                            <span class="badge
+                                {% if movement.movement_type == 'receipt' %}bg-success
+                                {% elif movement.movement_type == 'write_off' %}bg-danger
+                                {% elif movement.movement_type == 'transfer' %}bg-info
+                                {% else %}bg-secondary{% endif %} fs-6">
+                                {{ movement.get_movement_type_display }}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Дата движения:</th>
+                        <td>{{ movement.movement_date|date:"d.m.Y H:i" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Заготовка:</th>
+                        <td>
+                            <a href="{% url 'blanks:blank_detail' movement.blank.pk %}">
+                                <strong>{{ movement.blank.article }}</strong> - {{ movement.blank.name }}
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Количество:</th>
+                        <td><span class="fw-bold fs-5">{{ movement.quantity }} {{ movement.blank.unit }}</span></td>
+                    </tr>
+                    {% if movement.from_warehouse %}
+                    <tr>
+                        <th>Откуда (склад):</th>
+                        <td>
+                            <a href="{% url 'warehouse:warehouse_detail' movement.from_warehouse.pk %}">
+                                {{ movement.from_warehouse.code }} - {{ movement.from_warehouse.name }}
+                            </a>
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% if movement.to_warehouse %}
+                    <tr>
+                        <th>Куда (склад):</th>
+                        <td>
+                            <a href="{% url 'warehouse:warehouse_detail' movement.to_warehouse.pk %}">
+                                {{ movement.to_warehouse.code }} - {{ movement.to_warehouse.name }}
+                            </a>
+                        </td>
+                    </tr>
+                    {% endif %}
+                    <tr>
+                        <th>Основание:</th>
+                        <td>{{ movement.reason|default:"—" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Комментарий:</th>
+                        <td>{{ movement.comment|default:"—"|linebreaks }}</td>
+                    </tr>
+                    <tr>
+                        <th>Кто создал:</th>
+                        <td>{{ movement.created_by.get_full_name|default:movement.created_by.email }}</td>
+                    </tr>
+                    <tr>
+                        <th>Дата создания:</th>
+                        <td>{{ movement.created_at|date:"d.m.Y H:i" }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

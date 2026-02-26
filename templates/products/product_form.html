@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if object %}Редактирование{% else %}Создание{% endif %} изделия - Система учета{% endblock %}
+
+{% block page_title %}
+    {% if object %}Редактирование изделия: {{ object.name }}{% else %}Создание нового изделия{% endif %}
+{% endblock %}
+
+{% block page_actions %}
+    <a href="{% url 'products:product_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Назад
+    </a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <ul class="nav nav-tabs card-header-tabs" id="categoryTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="existing-tab" data-bs-toggle="tab" data-bs-target="#existing" type="button" role="tab">
+                            Выбрать существующую
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="new-tab" data-bs-toggle="tab" data-bs-target="#new" type="button" role="tab">
+                            Создать новую
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {{ form.article.label }}
+                            {% if form.article.field.required %}<span class="text-danger">*</span>{% endif %}
+                        </label>
+                        {% if form.article.errors %}
+                        <div class="alert alert-danger py-1">{{ form.article.errors }}</div>
+                        {% endif %}
+                        {{ form.article }}
+                        <div class="form-text">{{ form.article.help_text }}</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {{ form.name.label }}
+                            {% if form.name.field.required %}<span class="text-danger">*</span>{% endif %}
+                        </label>
+                        {% if form.name.errors %}
+                        <div class="alert alert-danger py-1">{{ form.name.errors }}</div>
+                        {% endif %}
+                        {{ form.name }}
+                    </div>
+
+                    <!-- Вкладки для категории -->
+                    <div class="tab-content mb-3">
+                        <div class="tab-pane fade show active" id="existing" role="tabpanel">
+                            <div class="mb-3">
+                                <label class="form-label">{{ form.category.label }}</label>
+                                {% if form.category.errors %}
+                                <div class="alert alert-danger py-1">{{ form.category.errors }}</div>
+                                {% endif %}
+                                {{ form.category }}
+                                {% if form.category.help_text %}
+                                <div class="form-text">{{ form.category.help_text }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="new" role="tabpanel">
+                            <div class="mb-3">
+                                <label class="form-label">{{ form.new_category.label }}</label>
+                                {% if form.new_category.errors %}
+                                <div class="alert alert-danger py-1">{{ form.new_category.errors }}</div>
+                                {% endif %}
+                                {{ form.new_category }}
+                                {% if form.new_category.help_text %}
+                                <div class="form-text">{{ form.new_category.help_text }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.description.label }}</label>
+                        {% if form.description.errors %}
+                        <div class="alert alert-danger py-1">{{ form.description.errors }}</div>
+                        {% endif %}
+                        {{ form.description }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.drawing.label }}</label>
+                        {% if object and object.drawing %}
+                        <div class="mb-2">
+                            <a href="{{ object.drawing.url }}" target="_blank" class="btn btn-sm btn-info">
+                                <i class="bi bi-file-earmark-pdf"></i> Текущий файл
+                            </a>
+                        </div>
+                        {% endif %}
+                        {% if form.drawing.errors %}
+                        <div class="alert alert-danger py-1">{{ form.drawing.errors }}</div>
+                        {% endif %}
+                        {{ form.drawing }}
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        {{ form.is_active }}
+                        <label class="form-check-label">{{ form.is_active.label }}</label>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Сохранить
+                        </button>
+                        <a href="{% url 'products:product_list' %}" class="btn btn-outline-secondary">
+                            Отмена
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Очищаем поле новой категории при переключении на существующую
+    document.getElementById('existing-tab').addEventListener('click', function() {
+        document.getElementById('id_new_category').value = '';
+    });
+
+    // Очищаем выбор существующей категории при переключении на новую
+    document.getElementById('new-tab').addEventListener('click', function() {
+        document.getElementById('id_category').value = '';
+    });
+
+    // Валидация формы перед отправкой
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const existingCategory = document.getElementById('id_category').value;
+        const newCategory = document.getElementById('id_new_category').value;
+        const activeTab = document.querySelector('.tab-pane.active').id;
+
+        if (activeTab === 'existing' && !existingCategory) {
+            e.preventDefault();
+            alert('Пожалуйста, выберите категорию из списка');
+        } else if (activeTab === 'new' && !newCategory.trim()) {
+            e.preventDefault();
+            alert('Пожалуйста, введите название новой категории');
+        }
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

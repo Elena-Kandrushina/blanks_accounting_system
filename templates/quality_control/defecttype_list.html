@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Виды брака - Система учета{% endblock %}
+
+{% block page_title %}Справочник видов брака{% endblock %}
+
+{% block page_actions %}
+    <a href="{% url 'quality_control:defecttype_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus"></i> Добавить вид брака
+    </a>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-md-12">
+        <form method="get" class="d-flex">
+            <input type="text" name="search" class="form-control me-2" placeholder="Поиск по коду или наименованию..." value="{{ request.GET.search|default:'' }}">
+            <button type="submit" class="btn btn-outline-primary">
+                <i class="bi bi-search"></i> Найти
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Код</th>
+                <th>Наименование</th>
+                <th>Описание</th>
+                <th>Статус</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for defect_type in defect_types %}
+            <tr>
+                <td><strong>{{ defect_type.code }}</strong></td>
+                <td>{{ defect_type.name }}</td>
+                <td>{{ defect_type.description|truncatechars:50|default:"—" }}</td>
+                <td>
+                    {% if defect_type.is_active %}
+                        <span class="badge bg-success">Активен</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Неактивен</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <a href="{% url 'quality_control:defecttype_edit' defect_type.pk %}" class="btn btn-warning" title="Редактировать">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center py-4">
+                    <i class="bi bi-tags fs-1 d-block text-muted"></i>
+                    <p class="text-muted">Виды брака не найдены</p>
+                    <a href="{% url 'quality_control:defecttype_create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus"></i> Добавить первый вид брака
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% include 'includes/pagination.html' %}
+{% endblock %}

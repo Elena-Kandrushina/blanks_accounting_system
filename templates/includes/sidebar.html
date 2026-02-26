@@ -1,0 +1,160 @@
+{% load static %}
+<div class="col-md-3 col-lg-2 d-md-block" id="sidebarMenu">
+    <div class="position-sticky pt-2">
+        <ul class="nav flex-column">
+            <!-- Главная / Дашборд -->
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_redirect' or request.path == '/' %}active{% endif %}"
+                   href="{% url 'users:dashboard_redirect' %}">
+                    <i class="bi bi-speedometer2"></i> Дашборд
+                </a>
+            </li>
+
+            <!-- Номенклатура (Технологи + Админ) -->
+            {% if user.role == 'admin' or user.role == 'technologist' %}
+            <li class="nav-item mt-1">
+                <span class="sidebar-heading px-3 text-muted small text-uppercase">
+                    <i class="bi bi-diagram-3"></i> Номенклатура
+                </span>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'blanks' in request.path %}active{% endif %}"
+                   href="{% url 'blanks:blank_list' %}">
+                    <i class="bi bi-gear"></i> Заготовки
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'products' in request.path %}active{% endif %}"
+                   href="{% url 'products:product_list' %}">
+                    <i class="bi bi-box"></i> Изделия
+                </a>
+            </li>
+            {% endif %}
+
+            <!-- Склад (Кладовщики + Админ) -->
+            {% if user.role == 'admin' or user.role == 'storekeeper' %}
+            <li class="nav-item mt-1">
+                <span class="sidebar-heading px-3 text-muted small text-uppercase">
+                    <i class="bi bi-shop"></i> Складской учет
+                </span>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'warehouse/balances' in request.path %}active{% endif %}"
+                   href="{% url 'warehouse:balance_list' %}">
+                    <i class="bi bi-clipboard-data"></i> Остатки
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'warehouse/movements' in request.path %}active{% endif %}"
+                   href="{% url 'warehouse:movement_list' %}">
+                    <i class="bi bi-arrow-left-right"></i> Движения
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'warehouse/warehouses' in request.path %}active{% endif %}"
+                   href="{% url 'warehouse:warehouse_list' %}">
+                    <i class="bi bi-building"></i> Склады
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'production/storekeeper/receipts' in request.path %}active{% endif %}"
+                   href="{% url 'production:storekeeper_receipt_list' %}">
+                    <i class="bi bi-box-arrow-in-down"></i> Заявки на выдачу
+                </a>
+            </li>
+            {% endif %}
+
+            <!-- Производство (Мастера + Админ) -->
+            {% if user.role == 'admin' or user.role == 'production_master' %}
+            <li class="nav-item mt-1">
+                <span class="sidebar-heading px-3 text-muted small text-uppercase">
+                    <i class="bi bi-gear-wide-connected"></i> Производство
+                </span>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'production/receipts' in request.path %}active{% endif %}"
+                   href="{% url 'production:receipt_list' %}">
+                    <i class="bi bi-box-arrow-in-down"></i> Заявки на выдачу
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'production/reports' in request.path %}active{% endif %}"
+                   href="{% url 'production:report_list' %}">
+                    <i class="bi bi-file-text"></i> Отчеты
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'production/balances' in request.path %}active{% endif %}"
+                   href="{% url 'production:balance_list' %}">
+                    <i class="bi bi-pie-chart"></i> Остатки на участках
+                </a>
+            </li>
+            {% endif %}
+
+            <!-- ОТК (Контролеры + Админ) -->
+            {% if user.role == 'admin' or user.role == 'otk_senior' %}
+            <li class="nav-item mt-1">
+                <span class="sidebar-heading px-3 text-muted small text-uppercase">
+                    <i class="bi bi-clipboard-check"></i> ОТК
+                </span>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'quality-control/defect-reports' in request.path %}active{% endif %}"
+                   href="{% url 'quality_control:defectreport_list' %}">
+                    <i class="bi bi-exclamation-triangle"></i> Акты о браке
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'quality-control/defect-types' in request.path %}active{% endif %}"
+                   href="{% url 'quality_control:defecttype_list' %}">
+                    <i class="bi bi-tags"></i> Виды брака
+                </a>
+            </li>
+            {% endif %}
+
+            <!-- Администрирование (только Админ) -->
+            {% if user.role == 'admin' or user.is_superuser %}
+            <li class="nav-item mt-2">
+                <span class="sidebar-heading px-3 text-muted small text-uppercase">
+                    <i class="bi bi-shield-lock"></i> Администрирование
+                </span>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'users/user' in request.path %}active{% endif %}"
+                   href="{% url 'users:user_list' %}">
+                    <i class="bi bi-people"></i> Пользователи
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if 'production/sites' in request.path %}active{% endif %}"
+                   href="{% url 'production:site_list' %}">
+                    <i class="bi bi-geo-alt"></i> Участки
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'admin:index' %}">
+                    <i class="bi bi-gear"></i> Admin
+                </a>
+            </li>
+            {% endif %}
+
+            <!-- Раздел для всех пользователей -->
+            <li class="nav-item mt-2">
+                <hr class="my-1">
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'users:profile' %}">
+                    <i class="bi bi-person-circle"></i> Профиль
+                </a>
+            </li>
+            <li class="nav-item">
+                <form method="post" action="{% url 'users:logout' %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="nav-link btn btn-link text-start w-100">
+                        <i class="bi bi-box-arrow-right"></i> Выйти
+                    </button>
+                </form>
+            </li>
+        </ul>
+    </div>
+</div>

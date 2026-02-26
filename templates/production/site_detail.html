@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ site.code }} - {{ site.name }} - Система учета{% endblock %}
+
+{% block page_title %}{{ site.code }} - {{ site.name }}{% endblock %}
+
+{% block page_actions %}
+    <div class="btn-group">
+        <a href="{% url 'production:site_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Назад
+        </a>
+        {% if user.role == 'admin' %}
+        <a href="{% url 'production:site_edit' site.pk %}" class="btn btn-warning">
+            <i class="bi bi-pencil"></i> Редактировать
+        </a>
+        <a href="{% url 'production:site_delete' site.pk %}" class="btn btn-danger">
+            <i class="bi bi-trash"></i> Удалить
+        </a>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Информация об участке</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th>Код:</th>
+                        <td><strong>{{ site.code }}</strong></td>
+                    </tr>
+                    <tr>
+                        <th>Название:</th>
+                        <td>{{ site.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Привязанный склад:</th>
+                        <td>
+                            {% if site.warehouse %}
+                                <a href="{% url 'warehouse:warehouse_detail' site.warehouse.pk %}">
+                                    {{ site.warehouse.code }} - {{ site.warehouse.name }}
+                                </a>
+                            {% else %}
+                                <span class="text-muted">Не привязан</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Статус:</th>
+                        <td>
+                            {% if site.is_active %}
+                                <span class="badge bg-success">Активен</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Неактивен</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Инфо о привязанном складе и его остатках -->
+        {% if site.warehouse %}
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Склад: {{ site.warehouse.code }} - {{ site.warehouse.name }}</h5>
+            </div>
+            <div class="card-body">
+                <h6>Остатки на складе:</h6>
+                {% if warehouse_balances %}
+                    <ul class="list-group">
+                        {% for balance in warehouse_balances %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <a href="{% url 'blanks:blank_detail' balance.blank.pk %}">
+                                {{ balance.blank.name }}
+                            </a>
+                            <span class="badge bg-primary rounded-pill">{{ balance.quantity }} {{ balance.blank.unit }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    <div class="mt-2 text-end">
+                        <a href="{% url 'warehouse:balance_list' %}?warehouse={{ site.warehouse.pk }}" class="btn btn-sm btn-outline-primary">
+                            Все остатки на складе
+                        </a>
+                    </div>
+                {% else %}
+                    <p class="text-muted">Нет остатков на складе</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-8">
+        <!-- Остатки на участке -->
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Остатки на участке</h5>
+            </div>
+            <div class="card-body">
+                {% if balances %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Заготовка</th>
+                                    <th>Количество</th>
+                                    <th>Ед. изм.</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for balance in balances %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'blanks:blank_detail' balance.blank.pk %}">
+                                            {{ balance.blank.name }}
+                                        </a>
+                                    </td>
+                                    <td><strong>{{ balance.quantity }}</strong></td>
+                                    <td>{{ balance.blank.unit }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">Нет остатков на участке</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Последние поступления (заявки) -->
+        <div class="card mb-4">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0">Последние заявки на выдачу</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_receipts %}
+                    <div class="list-group">
+                        {% for receipt in recent_receipts %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">
+                                    <a href="{% url 'production:receipt_detail' receipt.pk %}">
+                                        {{ receipt.number }}
+                                    </a>
+                                </h6>
+                                <span class="badge
+                                    {% if receipt.status == 'completed' %}bg-success
+                                    {% elif receipt.status == 'cancelled' %}bg-danger
+                                    {% else %}bg-info{% endif %}">
+                                    {{ receipt.get_status_display }}
+                                </span>
+                            </div>
+                            <p class="mb-1">
+                                {{ receipt.blank.name }} -
+                                <strong>{{ receipt.quantity }} {{ receipt.blank.unit }}</strong>
+                            </p>
+                            <small class="text-muted">
+                                Дата: {{ receipt.receipt_date|date:"d.m.Y H:i" }}
+                                {% if receipt.processed_by %}
+                                    | Выдал: {{ receipt.processed_by.get_full_name|default:receipt.processed_by.email }}
+                                {% endif %}
+                            </small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-2 text-end">
+                        <a href="{% url 'production:receipt_list' %}?site={{ site.pk }}" class="btn btn-sm btn-outline-warning">
+                            Все заявки
+                        </a>
+                    </div>
+                {% else %}
+                    <p class="text-muted">Нет заявок на выдачу</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Отчеты о сборке -->
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Отчеты о сборке</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_reports %}
+                    <div class="list-group">
+                        {% for report in recent_reports %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">
+                                    <a href="{% url 'production:report_detail' report.pk %}">
+                                        {{ report.number }}
+                                    </a>
+                                </h6>
+                                <span class="badge bg-success">{{ report.quantity }} шт</span>
+                            </div>
+                            <p class="mb-1">
+                                {{ report.product.name }} -
+                                <strong>{{ report.quantity }} шт</strong>
+                                {% if report.defect_quantity > 0 %}
+                                    <span class="text-danger">(брак: {{ report.defect_quantity }})</span>
+                                {% endif %}
+                            </p>
+                            <small class="text-muted">
+                                Дата: {{ report.report_date|date:"d.m.Y" }}
+                                | Собрал: {{ report.produced_by.get_full_name|default:report.produced_by.email }}
+                            </small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-2 text-end">
+                        <a href="{% url 'production:report_list' %}?site={{ site.pk }}" class="btn btn-sm btn-outline-primary">
+                            Все отчеты
+                        </a>
+                    </div>
+                {% else %}
+                    <p class="text-muted">Нет отчетов о сборке</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

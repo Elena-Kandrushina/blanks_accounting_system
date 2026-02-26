@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Акты о браке - Система учета{% endblock %}
+
+{% block page_title %}Акты о браке заготовок{% endblock %}
+
+{% block page_actions %}
+    <a href="{% url 'quality_control:defectreport_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus"></i> Создать акт
+    </a>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-md-8">
+        <form method="get" class="row g-2">
+            <div class="col-md-3">
+                <select name="site" class="form-select">
+                    <option value="">Все участки</option>
+                    {% for site in sites %}
+                    <option value="{{ site.id }}" {% if request.GET.site == site.id|stringformat:"i" %}selected{% endif %}>
+                        {{ site.code }} - {{ site.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="confirmed" class="form-select">
+                    <option value="">Все статусы</option>
+                    <option value="pending" {% if request.GET.confirmed == 'pending' %}selected{% endif %}>Ожидает подтверждения</option>
+                    <option value="confirmed" {% if request.GET.confirmed == 'confirmed' %}selected{% endif %}>Подтвержден</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <input type="text" name="search" class="form-control" placeholder="Поиск по номеру, заготовке..." value="{{ request.GET.search }}">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-funnel"></i> Фильтр
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Номер акта</th>
+                <th>Дата</th>
+                <th>Участок</th>
+                <th>Заготовка</th>
+                <th>Вид брака</th>
+                <th>Количество</th>
+                <th>Статус</th>
+                <th>Обнаружил</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for report in reports %}
+            <tr class="{% if not report.is_confirmed %}table-warning{% endif %}">
+                <td><strong>{{ report.number }}</strong></td>
+                <td>{{ report.report_date|date:"d.m.Y" }}</td>
+                <td>{{ report.production_site.code }}</td>
+                <td>
+                    <a href="{% url 'blanks:blank_detail' report.blank.pk %}">
+                        {{ report.blank.article }} - {{ report.blank.name|truncatechars:20 }}
+                    </a>
+                </td>
+                <td>{{ report.defect_type.code }} - {{ report.defect_type.name }}</td>
+                <td><strong>{{ report.quantity }} {{ report.blank.unit }}</strong></td>
+                <td>
+                    {% if report.is_confirmed %}
+                        <span class="badge bg-success">Подтвержден</span>
+                    {% else %}
+                        <span class="badge bg-warning">Ожидает</span>
+                    {% endif %}
+                </td>
+                <td>{{ report.detected_by.get_full_name|default:report.detected_by.email }}</td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <a href="{% url 'quality_control:defectreport_detail' report.pk %}" class="btn btn-info" title="Просмотр">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        {% if not report.is_confirmed %}
+                        <a href="{% url 'quality_control:defectreport_confirm' report.pk %}" class="btn btn-success" title="Подтвердить">
+                            <i class="bi bi-check-lg"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="9" class="text-center py-4">
+                    <i class="bi bi-file-text fs-1 d-block text-muted"></i>
+                    <p class="text-muted">Акты о браке не найдены</p>
+                    <a href="{% url 'quality_control:defectreport_create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus"></i> Создать первый акт
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% include 'includes/pagination.html' %}
+{% endblock %}

@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Изделия - Система учета{% endblock %}
+
+{% block page_title %}Список изделий{% endblock %}
+
+{% block page_actions %}
+    {% if user.role == 'admin' or user.role == 'technologist' %}
+    <a href="{% url 'products:product_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus"></i> Добавить изделие
+    </a>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-md-6">
+        <form method="get" class="d-flex">
+            <input type="text" name="search" class="form-control me-2" placeholder="Поиск по артикулу или наименованию..." value="{{ request.GET.search|default:'' }}">
+            <button type="submit" class="btn btn-outline-primary">
+                <i class="bi bi-search"></i> Найти
+            </button>
+        </form>
+    </div>
+    <div class="col-md-6 text-end">
+        <span class="text-muted">Всего изделий: {{ page_obj.paginator.count }}</span>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Артикул</th>
+                <th>Наименование</th>
+                <th>Категория</th>
+                <th>Кол-во заготовок</th>
+                <th>Статус</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in products %}
+            <tr>
+                <td><strong>{{ product.article }}</strong></td>
+                <td>{{ product.name }}</td>
+                <td>{{ product.category.name|default:"—" }}</td>
+                <td>
+                    {% with count=product.consumption_norms.count %}
+                        {% if count > 0 %}
+                            <span class="badge bg-success">{{ count }}</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">0</span>
+                        {% endif %}
+                    {% endwith %}
+                </td>
+                <td>
+                    {% if product.is_active %}
+                        <span class="badge bg-success">Активно</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Неактивно</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <a href="{% url 'products:product_detail' product.pk %}" class="btn btn-info" title="Просмотр">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        {% if user.role == 'admin' or user.role == 'technologist' %}
+                        <a href="{% url 'products:product_edit' product.pk %}" class="btn btn-warning" title="Редактировать">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <a href="{% url 'products:norm_create' %}?product={{ product.pk }}" class="btn btn-success" title="Добавить норму">
+                            <i class="bi bi-plus-circle"></i>
+                        </a>
+                        {% endif %}
+                        {% if user.role == 'admin' %}
+                        <a href="{% url 'products:product_delete' product.pk %}" class="btn btn-danger" title="Удалить">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center py-4">
+                    <i class="bi bi-box fs-1 d-block text-muted"></i>
+                    <p class="text-muted">Изделия не найдены</p>
+                    {% if user.role == 'admin' or user.role == 'technologist' %}
+                    <a href="{% url 'products:product_create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus"></i> Создать первое изделие
+                    </a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% include 'includes/pagination.html' %}
+{% endblock %}

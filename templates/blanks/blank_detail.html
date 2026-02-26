@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ blank.article }} - {{ blank.name }} - Система учета{% endblock %}
+
+{% block page_title %}{{ blank.article }} - {{ blank.name }}{% endblock %}
+
+{% block page_actions %}
+    <div class="btn-group">
+        <a href="{% url 'blanks:blank_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Назад
+        </a>
+        {% if user.role == 'admin' or user.role == 'technologist' %}
+        <a href="{% url 'blanks:blank_edit' blank.pk %}" class="btn btn-warning">
+            <i class="bi bi-pencil"></i> Редактировать
+        </a>
+        {% endif %}
+        {% if user.role == 'admin' %}
+        <a href="{% url 'blanks:blank_delete' blank.pk %}" class="btn btn-danger">
+            <i class="bi bi-trash"></i> Удалить
+        </a>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Основная информация</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th style="width: 30%">Артикул:</th>
+                        <td><strong>{{ blank.article }}</strong></td>
+                    </tr>
+                    <tr>
+                        <th>Наименование:</th>
+                        <td>{{ blank.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Категория:</th>
+                        <td>
+                            {% if blank.category %}
+                                {{ blank.category.name }}
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Единица измерения:</th>
+                        <td>{{ blank.get_unit_display }}</td>
+                    </tr>
+                    <tr>
+                        <th>Вес (кг):</th>
+                        <td>{{ blank.weight|default:"—" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Статус:</th>
+                        <td>
+                            {% if blank.is_active %}
+                                <span class="badge bg-success">Активна</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Неактивна</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Дата создания:</th>
+                        <td>{{ blank.created_at|date:"d.m.Y H:i" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Последнее обновление:</th>
+                        <td>{{ blank.updated_at|date:"d.m.Y H:i" }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Описание</h5>
+            </div>
+            <div class="card-body">
+                {% if blank.description %}
+                    {{ blank.description|linebreaks }}
+                {% else %}
+                    <p class="text-muted">Описание отсутствует</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Остатки на складах</h5>
+            </div>
+            <div class="card-body">
+                {% if stock_balances %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Склад</th>
+                                    <th>Количество</th>
+                                    <th>Мин. запас</th>
+                                    <th>Статус</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for balance in stock_balances %}
+                                <tr>
+                                    <td>{{ balance.warehouse.name }}</td>
+                                    <td><strong>{{ balance.quantity }} {{ blank.unit }}</strong></td>
+                                    <td>{{ balance.min_stock }} {{ blank.unit }}</td>
+                                    <td>
+                                        {% if balance.quantity <= 0 %}
+                                            <span class="badge bg-danger">Отсутствует</span>
+                                        {% elif balance.quantity <= balance.min_stock %}
+                                            <span class="badge bg-warning">Критический</span>
+                                        {% else %}
+                                            <span class="badge bg-success">Норма</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">Нет остатков на складах</p>
+                {% endif %}
+
+                {% if user.role == 'admin' or user.role == 'storekeeper' %}
+                <a href="{% url 'warehouse:movement_create' %}?blank={{ blank.id }}" class="btn btn-sm btn-primary mt-2">
+                    <i class="bi bi-arrow-left-right"></i> Создать движение
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Используется в изделиях</h5>
+            </div>
+            <div class="card-body">
+                {% if used_in_products %}
+                    <ul class="list-group">
+                        {% for norm in used_in_products %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <a href="{% url 'products:product_detail' norm.product.pk %}">
+                                {{ norm.product.article }} - {{ norm.product.name }}
+                            </a>
+                            <span class="badge bg-primary rounded-pill">{{ norm.quantity }} {{ blank.unit }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted">Не используется в изделиях</p>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if user.role == 'admin' or user.role == 'production_master' %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">Поступления на участки</h5>
+            </div>
+            <div class="card-body">
+                {% if receipts %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Дата</th>
+                                    <th>Участок</th>
+                                    <th>Количество</th>
+                                    <th>Откуда</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for receipt in receipts %}
+                                <tr>
+                                    <td>{{ receipt.receipt_date|date:"d.m.Y" }}</td>
+                                    <td>{{ receipt.production_site.code }}</td>
+                                    <td>{{ receipt.quantity }} {{ blank.unit }}</td>
+                                    <td>{{ receipt.source_info|default:"—" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">Нет поступлений на участки</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

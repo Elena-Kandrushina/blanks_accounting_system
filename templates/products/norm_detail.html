@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Норма расхода - {{ norm.product.name }} - Система учета{% endblock %}
+
+{% block page_title %}Норма расхода{% endblock %}
+
+{% block page_actions %}
+    <div class="btn-group">
+        <a href="{% url 'products:norm_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Назад к списку
+        </a>
+        {% if user.role == 'admin' or user.role == 'technologist' %}
+        <a href="{% url 'products:norm_edit' norm.pk %}" class="btn btn-warning">
+            <i class="bi bi-pencil"></i> Редактировать
+        </a>
+        {% endif %}
+        {% if user.role == 'admin' %}
+        <a href="{% url 'products:norm_delete' norm.pk %}" class="btn btn-danger">
+            <i class="bi bi-trash"></i> Удалить
+        </a>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Информация о норме расхода</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th style="width: 30%">Изделие:</th>
+                        <td>
+                            <a href="{% url 'products:product_detail' norm.product.pk %}">
+                                <strong>{{ norm.product.article }}</strong> - {{ norm.product.name }}
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Заготовка:</th>
+                        <td>
+                            <a href="{% url 'blanks:blank_detail' norm.blank.pk %}">
+                                <strong>{{ norm.blank.article }}</strong> - {{ norm.blank.name }}
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Количество:</th>
+                        <td>
+                            <span class="fw-bold fs-4">{{ norm.quantity }}</span> {{ norm.blank.unit }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Категория заготовки:</th>
+                        <td>{{ norm.blank.category.name|default:"—" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Единица измерения:</th>
+                        <td>{{ norm.blank.get_unit_display }}</td>
+                    </tr>
+                    <tr>
+                        <th>Дата создания:</th>
+                        <td>{{ norm.created_at|date:"d.m.Y H:i" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Последнее обновление:</th>
+                        <td>{{ norm.updated_at|date:"d.m.Y H:i" }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">Информация об изделии</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr>
+                        <th style="width: 30%">Артикул:</th>
+                        <td>{{ norm.product.article }}</td>
+                    </tr>
+                    <tr>
+                        <th>Наименование:</th>
+                        <td>{{ norm.product.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Категория:</th>
+                        <td>{{ norm.product.category.name|default:"—" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Статус:</th>
+                        <td>
+                            {% if norm.product.is_active %}
+                                <span class="badge bg-success">Активно</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Неактивно</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+                <a href="{% url 'products:product_detail' norm.product.pk %}" class="btn btn-outline-primary">
+                    <i class="bi bi-box"></i> Перейти к изделию
+                </a>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">Информация о заготовке</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr>
+                        <th style="width: 30%">Артикул:</th>
+                        <td>{{ norm.blank.article }}</td>
+                    </tr>
+                    <tr>
+                        <th>Наименование:</th>
+                        <td>{{ norm.blank.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Категория:</th>
+                        <td>{{ norm.blank.category.name|default:"—" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Единица измерения:</th>
+                        <td>{{ norm.blank.get_unit_display }}</td>
+                    </tr>
+                    <tr>
+                        <th>Вес (кг):</th>
+                        <td>{{ norm.blank.weight|default:"—" }}</td>
+                    </tr>
+                </table>
+                <a href="{% url 'blanks:blank_detail' norm.blank.pk %}" class="btn btn-outline-primary">
+                    <i class="bi bi-gear"></i> Перейти к заготовке
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

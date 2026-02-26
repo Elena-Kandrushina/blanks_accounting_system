@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Удаление изделия - Система учета{% endblock %}
+
+{% block page_title %}Удаление изделия{% endblock %}
+
+{% block page_actions %}
+    <a href="{% url 'products:product_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Назад к списку
+    </a>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">Подтверждение удаления</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <i class="bi bi-box text-danger fs-1 d-block mb-3"></i>
+
+                    <h4>{{ product.article }} - {{ product.name }}</h4>
+
+                    <div class="alert alert-warning mt-3">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Внимание!</strong> Вы собираетесь удалить изделие.
+                        <br>Это действие <strong>необратимо</strong>.
+                    </div>
+
+                    <div class="text-start bg-light p-3 rounded">
+                        <p><strong>Артикул:</strong> {{ product.article }}</p>
+                        <p><strong>Наименование:</strong> {{ product.name }}</p>
+                        <p><strong>Категория:</strong> {{ product.category.name|default:"—" }}</p>
+                        <p><strong>Количество заготовок:</strong> {{ product.consumption_norms.count }}</p>
+                        <p><strong>Статус:</strong>
+                            {% if product.is_active %}
+                                <span class="badge bg-success">Активно</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Неактивно</span>
+                            {% endif %}
+                        </p>
+                    </div>
+
+                    {% if product.consumption_norms.count > 0 %}
+                    <div class="alert alert-danger mt-3">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Невозможно удалить!</strong> У изделия есть нормы расхода.
+                        <br>Сначала удалите все нормы расхода.
+                    </div>
+                    {% endif %}
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between">
+                        {% if product.consumption_norms.count > 0 %}
+                        <a href="{% url 'products:product_detail' product.pk %}" class="btn btn-primary">
+                            Вернуться к изделию
+                        </a>
+                        {% else %}
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> Да, удалить изделие
+                        </button>
+                        {% endif %}
+                        <a href="{% url 'products:product_list' %}" class="btn btn-outline-secondary">
+                            Отмена
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

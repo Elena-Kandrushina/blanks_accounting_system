@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Склады - Система учета{% endblock %}
+
+{% block page_title %}Склады{% endblock %}
+
+{% block page_actions %}
+    {% if user.role == 'admin' %}
+    <a href="{% url 'warehouse:warehouse_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus"></i> Добавить склад
+    </a>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-md-6">
+        <form method="get" class="d-flex">
+            <input type="text" name="search" class="form-control me-2" placeholder="Поиск по названию или коду..." value="{{ request.GET.search|default:'' }}">
+            <button type="submit" class="btn btn-outline-primary">
+                <i class="bi bi-search"></i> Найти
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    {% for warehouse in warehouses %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 {% if not warehouse.is_active %}bg-light{% endif %}">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">{{ warehouse.code }}</h5>
+                <div>
+                    {% if not warehouse.is_active %}
+                        <span class="badge bg-secondary">Неактивен</span>
+                    {% endif %}
+                    {% if user.role == 'admin' %}
+    <a href="{% url 'warehouse:warehouse_delete' warehouse.pk %}" class="btn btn-sm btn-danger ms-2">
+        <i class="bi bi-trash"></i> УДАЛИТЬ
+    </a>
+{% endif %}
+                </div>
+            </div>
+            <div class="card-body">
+                <h6 class="card-title">{{ warehouse.name }}</h6>
+                <p class="card-text text-muted">{{ warehouse.address|default:"Адрес не указан" }}</p>
+
+                <div class="mt-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Позиций на складе:</span>
+                        <span class="badge bg-primary">{{ warehouse.balances.count }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mt-2">
+                        <span>Общее количество:</span>
+                        <span class="badge bg-success">{{ warehouse.balances.aggregate.total|default:0|floatformat:0 }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer bg-transparent">
+                <div class="btn-group w-100">
+                    <a href="{% url 'warehouse:warehouse_detail' warehouse.pk %}" class="btn btn-outline-primary">
+                        <i class="bi bi-eye"></i> Подробнее
+                    </a>
+                    {% if user.role == 'admin' %}
+                    <a href="{% url 'warehouse:warehouse_edit' warehouse.pk %}" class="btn btn-outline-warning">
+                        <i class="bi bi-pencil"></i> Редактировать
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-5">
+        <i class="bi bi-building fs-1 d-block text-muted"></i>
+        <p class="text-muted">Склады не найдены</p>
+        {% if user.role == 'admin' %}
+        <a href="{% url 'warehouse:warehouse_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus"></i> Создать первый склад
+        </a>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+{% include 'includes/pagination.html' %}
+{% endblock %}

@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Остатки на складах - Система учета{% endblock %}
+
+{% block page_title %}Остатки заготовок на складах{% endblock %}
+
+{% block page_actions %}
+    <div class="btn-group">
+        <a href="{% url 'warehouse:movement_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus"></i> Новое движение
+        </a>
+        <a href="{% url 'warehouse:stock_report' %}" class="btn btn-info">
+            <i class="bi bi-graph-up"></i> Отчет
+        </a>
+    </div>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-md-8">
+        <form method="get" class="row g-2">
+            <div class="col-md-3">
+                <select name="warehouse" class="form-select">
+                    <option value="">Все склады</option>
+                    {% for warehouse in warehouses %}
+                    <option value="{{ warehouse.id }}" {% if current_filters.warehouse == warehouse.id|stringformat:"i" %}selected{% endif %}>
+                        {{ warehouse.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <input type="text" name="search" class="form-control" placeholder="Поиск заготовки..." value="{{ current_filters.search }}">
+            </div>
+            <div class="col-md-3">
+                <div class="form-check mt-2">
+                    <input type="checkbox" name="low_stock" class="form-check-input" id="lowStock" {% if current_filters.low_stock %}checked{% endif %}>
+                    <label class="form-check-label" for="lowStock">Только критический запас</label>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Применить
+                </button>
+            </div>
+        </form>
+    </div>
+    <div class="col-md-4 text-end">
+        <span class="text-muted">Всего позиций: {{ page_obj.paginator.count }}</span>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Склад</th>
+                <th>Артикул</th>
+                <th>Наименование заготовки</th>
+                <th>Количество</th>
+                <th>Ед. изм.</th>
+                <th>Мин. запас</th>
+                <th>Статус</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for balance in balances %}
+            <tr class="{% if balance.quantity <= balance.min_stock %}table-warning{% endif %}">
+                <td>
+                    <strong>{{ balance.warehouse.code }}</strong><br>
+                    <small>{{ balance.warehouse.name }}</small>
+                </td>
+                <td>{{ balance.blank.article }}</td>
+                <td>
+                    <a href="{% url 'blanks:blank_detail' balance.blank.pk %}">
+                        {{ balance.blank.name }}
+                    </a>
+                </td>
+                <td class="{% if balance.quantity <= balance.min_stock %}text-danger fw-bold{% endif %}">
+                    {{ balance.quantity }}
+                </td>
+                <td>{{ balance.blank.unit }}</td>
+                <td>{{ balance.min_stock }}</td>
+                <td>
+                    {% if balance.quantity <= 0 %}
+                        <span class="badge bg-danger">Отсутствует</span>
+                    {% elif balance.quantity <= balance.min_stock %}
+                        <span class="badge bg-warning">Критический</span>
+                    {% else %}
+                        <span class="badge bg-success">Норма</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <a href="{% url 'warehouse:movement_create' %}?blank={{ balance.blank.id }}&warehouse={{ balance.warehouse.id }}" class="btn btn-primary" title="Создать движение">
+                            <i class="bi bi-arrow-left-right"></i>
+                        </a>
+                        <a href="{% url 'warehouse:balance_edit' balance.pk %}" class="btn btn-warning" title="Редактировать мин. запас">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" class="text-center py-4">
+                    <i class="bi bi-shop fs-1 d-block text-muted"></i>
+                    <p class="text-muted">Остатки не найдены</p>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% include 'includes/pagination.html' %}
+{% endblock %}

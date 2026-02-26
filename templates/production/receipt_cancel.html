@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Отмена заявки - Система учета{% endblock %}
+
+{% block page_title %}Отмена заявки на выдачу{% endblock %}
+
+{% block page_actions %}
+    <a href="{% url 'production:receipt_detail' receipt.pk %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Назад к заявке
+    </a>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">Подтверждение отмены заявки</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <i class="bi bi-x-circle text-danger fs-1 d-block mb-3"></i>
+
+                    <h4>Заявка {{ receipt.number }}</h4>
+
+                    <table class="table table-bordered mt-3">
+                        <tr>
+                            <th>Участок</th>
+                            <td>{{ receipt.production_site.code }} - {{ receipt.production_site.name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Заготовка</th>
+                            <td>{{ receipt.blank.article }} - {{ receipt.blank.name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Количество</th>
+                            <td><strong>{{ receipt.quantity }} {{ receipt.blank.unit }}</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Текущий статус</th>
+                            <td>
+                                {% if receipt.status == 'new' %}
+                                    <span class="badge bg-info">Новая</span>
+                                {% elif receipt.status == 'processing' %}
+                                    <span class="badge bg-warning">В обработке</span>
+                                {% elif receipt.status == 'completed' %}
+                                    <span class="badge bg-success">Выполнена</span>
+                                {% elif receipt.status == 'cancelled' %}
+                                    <span class="badge bg-danger">Отменена</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Внимание!</strong> Вы собираетесь отменить заявку.
+                        <br>Это действие <strong>необратимо</strong>.
+                        <br>Отмененную заявку нельзя будет обработать.
+                    </div>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="reason" class="form-label">Причина отмены (необязательно)</label>
+                        <textarea name="reason" id="reason" class="form-control" rows="3" placeholder="Укажите причину отмены..."></textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-x-lg"></i> Подтвердить отмену
+                        </button>
+                        <a href="{% url 'production:receipt_detail' receipt.pk %}" class="btn btn-outline-secondary">
+                            Отмена
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

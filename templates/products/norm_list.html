@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Нормы расхода - Система учета{% endblock %}
+
+{% block page_title %}Нормы расхода{% endblock %}
+
+{% block page_actions %}
+    {% if user.role == 'admin' or user.role == 'technologist' %}
+    <a href="{% url 'products:norm_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus"></i> Добавить норму
+    </a>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-md-6">
+        <form method="get" class="d-flex">
+            <select name="product" class="form-select me-2">
+                <option value="">Все изделия</option>
+                {% for product in products %}
+                <option value="{{ product.id }}" {% if current_product == product.id|stringformat:"i" %}selected{% endif %}>
+                    {{ product.article }} - {{ product.name }}
+                </option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-outline-primary">
+                <i class="bi bi-funnel"></i> Фильтр
+            </button>
+        </form>
+    </div>
+    <div class="col-md-6 text-end">
+        <span class="text-muted">Всего норм: {{ page_obj.paginator.count }}</span>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Изделие</th>
+                <th>Артикул изделия</th>
+                <th>Заготовка</th>
+                <th>Артикул заготовки</th>
+                <th>Количество</th>
+                <th>Ед. изм.</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for norm in norms %}
+            <tr>
+                <td>
+                    <a href="{% url 'products:product_detail' norm.product.pk %}">
+                        {{ norm.product.name }}
+                    </a>
+                </td>
+                <td>{{ norm.product.article }}</td>
+                <td>
+                    <a href="{% url 'blanks:blank_detail' norm.blank.pk %}">
+                        {{ norm.blank.name }}
+                    </a>
+                </td>
+                <td>{{ norm.blank.article }}</td>
+                <td><strong>{{ norm.quantity }}</strong></td>
+                <td>{{ norm.blank.unit }}</td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <a href="{% url 'products:norm_detail' norm.pk %}" class="btn btn-info" title="Просмотр">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        {% if user.role == 'admin' or user.role == 'technologist' %}
+                        <a href="{% url 'products:norm_edit' norm.pk %}" class="btn btn-warning" title="Редактировать">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        {% endif %}
+                        {% if user.role == 'admin' %}
+                        <a href="{% url 'products:norm_delete' norm.pk %}" class="btn btn-danger" title="Удалить">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="text-center py-4">
+                    <i class="bi bi-file-text fs-1 d-block text-muted"></i>
+                    <p class="text-muted">Нормы расхода не найдены</p>
+                    {% if user.role == 'admin' or user.role == 'technologist' %}
+                    <a href="{% url 'products:norm_create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus"></i> Создать первую норму
+                    </a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% include 'includes/pagination.html' %}
+{% endblock %}

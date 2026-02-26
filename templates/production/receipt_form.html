@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Новая заявка - Система учета{% endblock %}
+
+{% block page_title %}Новая заявка на выдачу заготовок{% endblock %}
+
+{% block page_actions %}
+    <a href="{% url 'production:receipt_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Назад к списку
+    </a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Новая заявка на выдачу заготовок</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {{ form.production_site.label }}
+                            {% if form.production_site.field.required %}<span class="text-danger">*</span>{% endif %}
+                        </label>
+                        {% if form.production_site.errors %}
+                        <div class="alert alert-danger py-1">{{ form.production_site.errors }}</div>
+                        {% endif %}
+                        {{ form.production_site }}
+                        <div class="form-text">Выберите участок, на который требуются заготовки</div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {{ form.blank.label }}
+                                {% if form.blank.field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {% if form.blank.errors %}
+                            <div class="alert alert-danger py-1">{{ form.blank.errors }}</div>
+                            {% endif %}
+                            {{ form.blank }}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {{ form.quantity.label }}
+                                {% if form.quantity.field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {% if form.quantity.errors %}
+                            <div class="alert alert-danger py-1">{{ form.quantity.errors }}</div>
+                            {% endif %}
+                            {{ form.quantity }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {{ form.receipt_date.label }}
+                            {% if form.receipt_date.field.required %}<span class="text-danger">*</span>{% endif %}
+                        </label>
+                        {% if form.receipt_date.errors %}
+                        <div class="alert alert-danger py-1">{{ form.receipt_date.errors }}</div>
+                        {% endif %}
+                        {{ form.receipt_date }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {{ form.comment.label }}
+                        </label>
+                        {% if form.comment.errors %}
+                        <div class="alert alert-danger py-1">{{ form.comment.errors }}</div>
+                        {% endif %}
+                        {{ form.comment }}
+                        <div class="form-text">Необязательное поле</div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Информация:</strong> После создания заявки будет автоматически сгенерирован номер документа,
+                        а заготовки будут зачислены на выбранный участок.
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-save"></i> Создать заявку
+                        </button>
+                        <a href="{% url 'production:receipt_list' %}" class="btn btn-outline-secondary">
+                            Отмена
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

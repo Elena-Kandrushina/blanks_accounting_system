@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if object %}Редактирование{% else %}Создание{% endif %} движения - Система учета{% endblock %}
+
+{% block page_title %}
+    {% if object %}Редактирование движения{% else %}Новое движение заготовок{% endif %}
+{% endblock %}
+
+{% block page_actions %}
+    <a href="{% url 'warehouse:movement_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Назад к списку
+    </a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    {% if object %}Редактирование движения{% else %}Создание нового движения{% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {{ form.movement_type.label }}
+                            {% if form.movement_type.field.required %}<span class="text-danger">*</span>{% endif %}
+                        </label>
+                        {% if form.movement_type.errors %}
+                        <div class="alert alert-danger py-1">{{ form.movement_type.errors }}</div>
+                        {% endif %}
+                        {{ form.movement_type }}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {{ form.from_warehouse.label }}
+                            </label>
+                            {% if form.from_warehouse.errors %}
+                            <div class="alert alert-danger py-1">{{ form.from_warehouse.errors }}</div>
+                            {% endif %}
+                            {{ form.from_warehouse }}
+                        </div>
+
+                        <div class="col-md-6 mb-3" id="to_warehouse_field">
+                            <label class="form-label">
+                                {{ form.to_warehouse.label }}
+                            </label>
+                            {% if form.to_warehouse.errors %}
+                            <div class="alert alert-danger py-1">{{ form.to_warehouse.errors }}</div>
+                            {% endif %}
+                            {{ form.to_warehouse }}
+                        </div>
+                    </div>
+
+                    <!-- поле для выбора участка -->
+                    <div class="row mb-3" id="to_production_site_field">
+                        <div class="col-12">
+                            <label class="form-label">
+                                {{ form.to_production_site.label }}
+                            </label>
+                            {% if form.to_production_site.errors %}
+                            <div class="alert alert-danger py-1">{{ form.to_production_site.errors }}</div>
+                            {% endif %}
+                            {{ form.to_production_site }}
+                            <div class="form-text">Выберите участок для прямой передачи</div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {{ form.blank.label }}
+                                {% if form.blank.field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {% if form.blank.errors %}
+                            <div class="alert alert-danger py-1">{{ form.blank.errors }}</div>
+                            {% endif %}
+                            {{ form.blank }}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {{ form.quantity.label }}
+                                {% if form.quantity.field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {% if form.quantity.errors %}
+                            <div class="alert alert-danger py-1">{{ form.quantity.errors }}</div>
+                            {% endif %}
+                            {{ form.quantity }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {{ form.movement_date.label }}
+                            {% if form.movement_date.field.required %}<span class="text-danger">*</span>{% endif %}
+                        </label>
+                        {% if form.movement_date.errors %}
+                        <div class="alert alert-danger py-1">{{ form.movement_date.errors }}</div>
+                        {% endif %}
+                        {{ form.movement_date }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {{ form.reason.label }}
+                        </label>
+                        {% if form.reason.errors %}
+                        <div class="alert alert-danger py-1">{{ form.reason.errors }}</div>
+                        {% endif %}
+                        {{ form.reason }}
+                        <div class="form-text">{{ form.reason.help_text }}</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {{ form.comment.label }}
+                        </label>
+                        {% if form.comment.errors %}
+                        <div class="alert alert-danger py-1">{{ form.comment.errors }}</div>
+                        {% endif %}
+                        {{ form.comment }}
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>При передаче на участок:</strong> заготовки будут автоматически зачислены на выбранный участок.
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Сохранить
+                        </button>
+                        <a href="{% url 'warehouse:movement_list' %}" class="btn btn-outline-secondary">
+                            Отмена
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const movementType = document.getElementById('id_movement_type');
+    const fromWarehouse = document.getElementById('id_from_warehouse');
+    const toWarehouse = document.getElementById('id_to_warehouse');
+    const toProductionSite = document.getElementById('id_to_production_site');
+    const toWarehouseField = document.getElementById('to_warehouse_field');
+    const toProductionSiteField = document.getElementById('to_production_site_field');
+
+    function updateFields() {
+        const type = movementType.value;
+
+        // Сбрасываем все поля
+        fromWarehouse.disabled = false;
+        fromWarehouse.required = false;
+        toWarehouse.disabled = true;
+        toWarehouse.required = false;
+        toProductionSite.disabled = true;
+        toProductionSite.required = false;
+
+        // Показываем/скрываем поля
+        toWarehouseField.style.display = 'block';
+        toProductionSiteField.style.display = 'block';
+
+        if (type === 'receipt') {
+            // Поступление - только куда
+            fromWarehouse.disabled = true;
+            toWarehouse.disabled = false;
+            toProductionSite.disabled = false;
+
+        } else if (type === 'write_off') {
+            // Списание - только откуда
+            fromWarehouse.disabled = false;
+            fromWarehouse.required = true;
+            toWarehouse.disabled = true;
+            toProductionSite.disabled = true;
+            toWarehouseField.style.display = 'none';
+            toProductionSiteField.style.display = 'none';
+
+        } else if (type === 'transfer') {
+            // Перемещение - откуда и куда (склад или участок)
+            fromWarehouse.disabled = false;
+            fromWarehouse.required = true;
+            toWarehouse.disabled = false;
+            toProductionSite.disabled = false;
+        }
+    }
+
+    movementType.addEventListener('change', updateFields);
+    updateFields(); // Вызываем при загрузке
+
+    // Дополнительная логика: если выбран участок, очищаем поле склада и наоборот
+    toWarehouse.addEventListener('change', function() {
+        if (this.value) {
+            toProductionSite.value = '';
+        }
+    });
+
+    toProductionSite.addEventListener('change', function() {
+        if (this.value) {
+            toWarehouse.value = '';
+        }
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Редактирование остатка - Система учета{% endblock %}
+
+{% block page_title %}Редактирование минимального запаса{% endblock %}
+
+{% block page_actions %}
+    <a href="{% url 'warehouse:balance_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Назад к остаткам
+    </a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 mx-auto">
+        <div class="card">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0">Редактирование остатка</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <strong>Склад:</strong> {{ object.warehouse.name }}<br>
+                    <strong>Заготовка:</strong> {{ object.blank.article }} - {{ object.blank.name }}<br>
+                    <strong>Текущее количество:</strong> {{ object.quantity }} {{ object.blank.unit }}
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {{ form.min_stock.label }}
+                        </label>
+                        {% if form.min_stock.errors %}
+                        <div class="alert alert-danger py-1">{{ form.min_stock.errors }}</div>
+                        {% endif %}
+                        {{ form.min_stock }}
+                        <div class="form-text">Минимальный запас, при котором нужно заказывать пополнение</div>
+                    </div>
+
+
+                    {{ form.warehouse }}
+                    {{ form.blank }}
+                    {{ form.quantity }}
+
+                    <div class="d-flex justify-content-between">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Сохранить
+                        </button>
+                        <a href="{% url 'warehouse:balance_list' %}" class="btn btn-outline-secondary">
+                            Отмена
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

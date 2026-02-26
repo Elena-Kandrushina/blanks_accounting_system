@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Акт {{ report.number }} - Система учета{% endblock %}
+
+{% block page_title %}Акт о браке: {{ report.number }}{% endblock %}
+
+{% block page_actions %}
+    <div class="btn-group">
+        <a href="{% url 'quality_control:defectreport_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Назад
+        </a>
+        {% if not report.is_confirmed %}
+        <a href="{% url 'quality_control:defectreport_confirm' report.pk %}" class="btn btn-warning">
+            <i class="bi bi-check-lg"></i> Подтвердить
+        </a>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header {% if report.is_confirmed %}bg-success{% else %}bg-warning{% endif %} text-white">
+                <h5 class="mb-0">Детали акта о браке</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th style="width: 30%">Номер акта:</th>
+                        <td><strong>{{ report.number }}</strong></td>
+                    </tr>
+                    <tr>
+                        <th>Дата акта:</th>
+                        <td>{{ report.report_date|date:"d.m.Y" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Участок:</th>
+                        <td>
+                            <a href="{% url 'production:site_detail' report.production_site.pk %}">
+                                {{ report.production_site.code }} - {{ report.production_site.name }}
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Заготовка:</th>
+                        <td>
+                            <a href="{% url 'blanks:blank_detail' report.blank.pk %}">
+                                {{ report.blank.article }} - {{ report.blank.name }}
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Количество:</th>
+                        <td><span class="fw-bold fs-5">{{ report.quantity }} {{ report.blank.unit }}</span></td>
+                    </tr>
+                    <tr>
+                        <th>Вид брака:</th>
+                        <td>{{ report.defect_type.code }} - {{ report.defect_type.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Описание:</th>
+                        <td>{{ report.description|linebreaks }}</td>
+                    </tr>
+                    {% if report.photo %}
+                    <tr>
+                        <th>Фото:</th>
+                        <td>
+                            <a href="{{ report.photo.url }}" target="_blank" class="btn btn-sm btn-info">
+                                <i class="bi bi-image"></i> Просмотреть фото
+                            </a>
+                        </td>
+                    </tr>
+                    {% endif %}
+                    <tr>
+                        <th>Статус:</th>
+                        <td>
+                            {% if report.is_confirmed %}
+                                <span class="badge bg-success">Подтвержден</span>
+                            {% else %}
+                                <span class="badge bg-warning">Ожидает подтверждения</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Обнаружил:</th>
+                        <td>{{ report.detected_by.get_full_name|default:report.detected_by.email }}</td>
+                    </tr>
+                    {% if report.is_confirmed %}
+                    <tr>
+                        <th>Подтвердил:</th>
+                        <td>{{ report.confirmed_by.get_full_name|default:report.confirmed_by.email }}</td>
+                    </tr>
+                    <tr>
+                        <th>Дата подтверждения:</th>
+                        <td>{{ report.confirmed_at|date:"d.m.Y H:i" }}</td>
+                    </tr>
+                    {% endif %}
+                    <tr>
+                        <th>Дата создания:</th>
+                        <td>{{ report.created_at|date:"d.m.Y H:i" }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

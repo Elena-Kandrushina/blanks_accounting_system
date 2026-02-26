@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Отчет по движениям - Система учета{% endblock %}
+
+{% block page_title %}Отчет по движениям заготовок{% endblock %}
+
+{% block page_actions %}
+    <a href="{% url 'warehouse:movement_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> К списку движений
+    </a>
+    <button onclick="window.print()" class="btn btn-info">
+        <i class="bi bi-printer"></i> Печать
+    </button>
+{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Параметры отчета</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Дата с</label>
+                <input type="date" name="date_from" class="form-control" value="{{ request.GET.date_from }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Дата по</label>
+                <input type="date" name="date_to" class="form-control" value="{{ request.GET.date_to }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Склад</label>
+                <select name="warehouse" class="form-select">
+                    <option value="">Все склады</option>
+                    {% for warehouse in warehouses %}
+                    <option value="{{ warehouse.id }}" {% if request.GET.warehouse == warehouse.id|stringformat:"i" %}selected{% endif %}>
+                        {{ warehouse.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Тип движения</label>
+                <select name="type" class="form-select">
+                    <option value="">Все типы</option>
+                    {% for type_code, type_name in movement_types %}
+                    <option value="{{ type_code }}" {% if request.GET.type == type_code %}selected{% endif %}>
+                        {{ type_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-file-text"></i> Сформировать отчет
+                </button>
+                <a href="{% url 'warehouse:stock_report' %}" class="btn btn-outline-secondary">
+                    Сбросить
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if request.GET.date_from or request.GET.date_to or request.GET.warehouse or request.GET.type %}
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Результаты отчета</h5>
+    </div>
+    <div class="card-body">
+        <!-- Итоги -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card bg-success text-white">
+                    <div class="card-body text-center">
+                        <h6>Поступления</h6>
+                        <h3>{{ total_in|floatformat:0 }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-danger text-white">
+                    <div class="card-body text-center">
+                        <h6>Списания</h6>
+                        <h3>{{ total_out|floatformat:0 }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-info text-white">
+                    <div class="card-body text-center">
+                        <h6>Перемещения</h6>
+                        <h3>{{ total_transfer|floatformat:0 }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Таблица движений -->
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Дата</th>
+                        <th>Документ</th>
+                        <th>Тип</th>
+                        <th>Заготовка</th>
+                        <th>Количество</th>
+                        <th>Откуда</th>
+                        <th>Куда</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for movement in movements %}
+                    <tr>
+                        <td>{{ movement.movement_date|date:"d.m.Y" }}</td>
+                        <td>{{ movement.number }}</td>
+                        <td>
+                            <span class="badge
+                                {% if movement.movement_type == 'receipt' %}bg-success
+                                {% elif movement.movement_type == 'write_off' %}bg-danger
+                                {% elif movement.movement_type == 'transfer' %}bg-info
+                                {% else %}bg-secondary{% endif %}">
+                                {{ movement.get_movement_type_display }}
+                            </span>
+                        </td>
+                        <td>{{ movement.blank.name }}</td>
+                        <td>{{ movement.quantity }} {{ movement.blank.unit }}</td>
+                        <td>{{ movement.from_warehouse.code|default:"—" }}</td>
+                        <td>{{ movement.to_warehouse.code|default:"—" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-3">
+                            Нет данных за выбранный период
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

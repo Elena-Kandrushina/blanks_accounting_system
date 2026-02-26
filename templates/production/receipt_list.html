@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Заявки на выдачу заготовок - Система учета{% endblock %}
+
+{% block page_title %}Заявки на выдачу заготовок{% endblock %}
+
+{% block page_actions %}
+    {% if can_create %}
+    <a href="{% url 'production:receipt_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus"></i> Новая заявка
+    </a>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-md-8">
+        <form method="get" class="row g-2">
+            <div class="col-md-2">
+                <select name="status" class="form-select">
+                    <option value="">Все статусы</option>
+                    <option value="new" {% if request.GET.status == 'new' %}selected{% endif %}>Новая</option>
+                    <option value="processing" {% if request.GET.status == 'processing' %}selected{% endif %}>В обработке</option>
+                    <option value="completed" {% if request.GET.status == 'completed' %}selected{% endif %}>Выполнена</option>
+                    <option value="cancelled" {% if request.GET.status == 'cancelled' %}selected{% endif %}>Отменена</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="site" class="form-select">
+                    <option value="">Все участки</option>
+                    {% for site in sites %}
+                    <option value="{{ site.id }}" {% if request.GET.site == site.id|stringformat:"i" %}selected{% endif %}>
+                        {{ site.code }} - {{ site.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="date" name="date_from" class="form-control" placeholder="С" value="{{ request.GET.date_from }}">
+            </div>
+            <div class="col-md-2">
+                <input type="date" name="date_to" class="form-control" placeholder="По" value="{{ request.GET.date_to }}">
+            </div>
+            <div class="col-md-2">
+                <input type="text" name="search" class="form-control" placeholder="Поиск..." value="{{ request.GET.search }}">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-funnel"></i> Фильтр
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Номер заявки</th>
+                <th>Дата</th>
+                <th>Участок</th>
+                <th>Заготовка</th>
+                <th>Количество</th>
+                <th>Статус</th>
+                <th>Откуда</th>
+                <th>Создал</th>
+                <th>Обработал</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for receipt in receipts %}
+            <tr>
+                <td><strong>{{ receipt.number }}</strong></td>
+                <td>{{ receipt.receipt_date|date:"d.m.Y H:i" }}</td>
+                <td>{{ receipt.production_site.code }}</td>
+                <td>
+                    <a href="{% url 'blanks:blank_detail' receipt.blank.pk %}">
+                        {{ receipt.blank.article }} - {{ receipt.blank.name }}
+                    </a>
+                </td>
+                <td><strong>{{ receipt.quantity }} {{ receipt.blank.unit }}</strong></td>
+                <td>
+                    {% if receipt.status == 'new' %}
+                        <span class="badge bg-info">Новая</span>
+                    {% elif receipt.status == 'processing' %}
+                        <span class="badge bg-warning">В обработке</span>
+                    {% elif receipt.status == 'completed' %}
+                        <span class="badge bg-success">Выполнена</span>
+                    {% elif receipt.status == 'cancelled' %}
+                        <span class="badge bg-danger">Отменена</span>
+                    {% else %}
+                        <span class="badge bg-secondary">{{ receipt.get_status_display }}</span>
+                    {% endif %}
+                </td>
+                <td>{{ receipt.source_info|default:"—" }}</td>
+                <td>
+                    {% if receipt.created_by %}
+                        {{ receipt.created_by.get_full_name|default:receipt.created_by.email }}
+                    {% else %}
+                        <span class="text-muted">—</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if receipt.processed_by %}
+                        {{ receipt.processed_by.get_full_name|default:receipt.processed_by.email }}
+                    {% else %}
+                        <span class="text-muted">—</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <a href="{% url 'production:receipt_detail' receipt.pk %}" class="btn btn-info" title="Просмотр">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        {% if receipt.status == 'new' and user.role == 'storekeeper' %}
+                            <a href="{% url 'production:receipt_process' receipt.pk %}" class="btn btn-success" title="Выдать заготовки">
+                                <i class="bi bi-check-lg"></i>
+                            </a>
+                        {% endif %}
+                        {% if receipt.status == 'new' and user.role == 'production_master' %}
+                            <a href="{% url 'production:receipt_cancel' receipt.pk %}" class="btn btn-danger" title="Отменить заявку">
+                                <i class="bi bi-x-lg"></i>
+                            </a>
+                        {% endif %}
+                        {% if user.is_superuser %}
+                            <a href="{% url 'production:receipt_process' receipt.pk %}" class="btn btn-success" title="Выдать заготовки (админ)">
+                                <i class="bi bi-check-lg"></i>
+                            </a>
+                            <a href="{% url 'production:receipt_cancel' receipt.pk %}" class="btn btn-danger" title="Отменить заявку (админ)">
+                                <i class="bi bi-x-lg"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="10" class="text-center py-4">
+                    <i class="bi bi-box-arrow-in-down fs-1 d-block text-muted"></i>
+                    <p class="text-muted">Заявки не найдены</p>
+                    {% if can_create %}
+                    <a href="{% url 'production:receipt_create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus"></i> Создать первую заявку
+                    </a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% include 'includes/pagination.html' %}
+{% endblock %}
