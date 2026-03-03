@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Создание акта о браке - Система учета{% endblock %}
+
+{% block page_title %}Новый акт о браке{% endblock %}
+
+{% block page_actions %}
+    <a href="{% url 'quality_control:defectreport_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Назад к списку
+    </a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">Регистрация брака заготовок</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                    {% endif %}
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {{ form.production_site.label }}
+                                {% if form.production_site.field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {% if form.production_site.errors %}
+                            <div class="alert alert-danger py-1">{{ form.production_site.errors }}</div>
+                            {% endif %}
+                            {{ form.production_site }}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {{ form.blank.label }}
+                                {% if form.blank.field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {% if form.blank.errors %}
+                            <div class="alert alert-danger py-1">{{ form.blank.errors }}</div>
+                            {% endif %}
+                            {{ form.blank }}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {{ form.quantity.label }}
+                                {% if form.quantity.field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {% if form.quantity.errors %}
+                            <div class="alert alert-danger py-1">{{ form.quantity.errors }}</div>
+                            {% endif %}
+                            {{ form.quantity }}
+                        </div>
+                    </div>
+
+                    <!-- Вкладки для выбора/создания вида брака -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <ul class="nav nav-tabs card-header-tabs" id="defectTypeTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="existing-tab" data-bs-toggle="tab" data-bs-target="#existing" type="button" role="tab">
+                                        Выбрать существующий
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="new-tab" data-bs-toggle="tab" data-bs-target="#new" type="button" role="tab">
+                                        Создать новый
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="card-body">
+                            <div class="tab-content">
+                                <!-- Вкладка с существующими видами брака -->
+                                <div class="tab-pane fade show active" id="existing" role="tabpanel">
+                                    <div class="mb-3">
+                                        <label class="form-label">{{ form.defect_type.label }}</label>
+                                        {% if form.defect_type.errors %}
+                                        <div class="alert alert-danger py-1">{{ form.defect_type.errors }}</div>
+                                        {% endif %}
+                                        {{ form.defect_type }}
+                                    </div>
+                                </div>
+
+                                <!-- Вкладка для создания нового вида брака -->
+                                <div class="tab-pane fade" id="new" role="tabpanel">
+                                    <div class="mb-3">
+                                        <label class="form-label">{{ form.new_defect_type_code.label }}</label>
+                                        {% if form.new_defect_type_code.errors %}
+                                        <div class="alert alert-danger py-1">{{ form.new_defect_type_code.errors }}</div>
+                                        {% endif %}
+                                        {{ form.new_defect_type_code }}
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">{{ form.new_defect_type_name.label }}</label>
+                                        {% if form.new_defect_type_name.errors %}
+                                        <div class="alert alert-danger py-1">{{ form.new_defect_type_name.errors }}</div>
+                                        {% endif %}
+                                        {{ form.new_defect_type_name }}
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">{{ form.new_defect_type_description.label }}</label>
+                                        {% if form.new_defect_type_description.errors %}
+                                        <div class="alert alert-danger py-1">{{ form.new_defect_type_description.errors }}</div>
+                                        {% endif %}
+                                        {{ form.new_defect_type_description }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {{ form.description.label }}
+                            {% if form.description.field.required %}<span class="text-danger">*</span>{% endif %}
+                        </label>
+                        {% if form.description.errors %}
+                        <div class="alert alert-danger py-1">{{ form.description.errors }}</div>
+                        {% endif %}
+                        {{ form.description }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.photo.label }}</label>
+                        {% if form.photo.errors %}
+                        <div class="alert alert-danger py-1">{{ form.photo.errors }}</div>
+                        {% endif %}
+                        {{ form.photo }}
+                        <div class="form-text">Приложите фото брака (необязательно)</div>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Внимание!</strong> После подтверждения акта заготовки будут автоматически списаны с участка.
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-save"></i> Создать акт
+                        </button>
+                        <a href="{% url 'quality_control:defectreport_list' %}" class="btn btn-outline-secondary">
+                            Отмена
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const existingTab = document.getElementById('existing-tab');
+    const newTab = document.getElementById('new-tab');
+    const defectTypeSelect = document.getElementById('id_defect_type');
+    const newCode = document.getElementById('id_new_defect_type_code');
+    const newName = document.getElementById('id_new_defect_type_name');
+    const newDescription = document.getElementById('id_new_defect_type_description');
+
+    function clearExisting() {
+        defectTypeSelect.value = '';
+    }
+
+    function clearNew() {
+        newCode.value = '';
+        newName.value = '';
+        newDescription.value = '';
+    }
+
+    existingTab.addEventListener('click', function() {
+        clearNew();
+    });
+
+    newTab.addEventListener('click', function() {
+        clearExisting();
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

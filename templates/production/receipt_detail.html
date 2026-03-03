@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Заявка {{ receipt.number }} - Система учета{% endblock %}
+
+{% block page_title %}Заявка на выдачу: {{ receipt.number }}{% endblock %}
+
+{% block page_actions %}
+    <div class="btn-group">
+        <a href="{% url 'production:receipt_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Назад к списку
+        </a>
+
+        {% if receipt.status == 'new' and user.role == 'storekeeper' %}
+            <a href="{% url 'production:receipt_process' receipt.pk %}" class="btn btn-success">
+                <i class="bi bi-check-lg"></i> Выдать заготовки
+            </a>
+        {% endif %}
+
+        {% if receipt.status == 'new' and user.role == 'production_master' %}
+            <a href="{% url 'production:receipt_cancel' receipt.pk %}" class="btn btn-danger">
+                <i class="bi bi-x-lg"></i> Отменить заявку
+            </a>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Детали заявки на выдачу заготовок</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th style="width: 30%">Номер заявки:</th>
+                        <td><strong>{{ receipt.number }}</strong></td>
+                    </tr>
+                    <tr>
+                        <th>Дата заявки:</th>
+                        <td>{{ receipt.receipt_date|date:"d.m.Y H:i" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Участок:</th>
+                        <td>
+                            <a href="{% url 'production:site_detail' receipt.production_site.pk %}">
+                                {{ receipt.production_site.code }} - {{ receipt.production_site.name }}
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Заготовка:</th>
+                        <td>
+                            <a href="{% url 'blanks:blank_detail' receipt.blank.pk %}">
+                                {{ receipt.blank.article }} - {{ receipt.blank.name }}
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Количество:</th>
+                        <td><span class="fw-bold fs-5">{{ receipt.quantity }} {{ receipt.blank.unit }}</span></td>
+                    </tr>
+                    <tr>
+                        <th>Статус:</th>
+                        <td>
+                            {% if receipt.status == 'new' %}
+                                <span class="badge bg-info fs-6">Новая</span>
+                            {% elif receipt.status == 'processing' %}
+                                <span class="badge bg-warning fs-6">В обработке</span>
+                            {% elif receipt.status == 'completed' %}
+                                <span class="badge bg-success fs-6">Выполнена</span>
+                            {% elif receipt.status == 'cancelled' %}
+                                <span class="badge bg-danger fs-6">Отменена</span>
+                            {% else %}
+                                <span class="badge bg-secondary fs-6">{{ receipt.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Создал:</th>
+                        <td>
+                            {% if receipt.created_by %}
+                                {{ receipt.created_by.get_full_name|default:receipt.created_by.email }}
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    <!-- инфо о движении -->
+                    {% if receipt.status == 'completed' %}
+                        {% with movements=receipt.stockmovement_set.all %}
+                            {% if movements.exists %}
+                                <tr>
+                                    <th>Движение:</th>
+                                    <td>
+                                        {% for movement in movements %}
+                                            <div class="mb-1">
+                                                <a href="{% url 'warehouse:movement_detail' movement.pk %}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-arrow-left-right"></i> {{ movement.number }}
+                                                </a>
+                                                <small class="text-muted ms-2">
+                                                    от {{ movement.movement_date|date:"d.m.Y H:i" }}
+                                                </small>
+                                            </div>
+                                        {% endfor %}
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        {% endwith %}
+                    {% endif %}
+
+                    {% if receipt.processed_by %}
+                    <tr>
+                        <th>Обработал:</th>
+                        <td>
+                            {{ receipt.processed_by.get_full_name|default:receipt.processed_by.email }}
+                        </td>
+                    </tr>
+                    {% endif %}
+
+                    {% if receipt.completed_date %}
+                    <tr>
+                        <th>Дата выполнения:</th>
+                        <td>{{ receipt.completed_date|date:"d.m.Y H:i" }}</td>
+                    </tr>
+                    {% endif %}
+
+                    <tr>
+                        <th>Откуда поступило:</th>
+                        <td>{{ receipt.source_info|default:"—" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Комментарий:</th>
+                        <td>{{ receipt.comment|default:"—"|linebreaks }}</td>
+                    </tr>
+                    <tr>
+                        <th>Дата создания записи:</th>
+                        <td>{{ receipt.created_at|date:"d.m.Y H:i" }}</td>
+                    </tr>
+                    {% if receipt.updated_at %}
+                    <tr>
+                        <th>Последнее обновление:</th>
+                        <td>{{ receipt.updated_at|date:"d.m.Y H:i" }}</td>
+                    </tr>
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

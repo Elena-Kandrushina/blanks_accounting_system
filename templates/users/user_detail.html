@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ user_obj.email }} - Пользователь - Система учета{% endblock %}
+
+{% block page_title %}Пользователь: {{ user_obj.email }}{% endblock %}
+
+{% block page_actions %}
+    <div class="btn-group">
+        <a href="{% url 'users:user_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Назад
+        </a>
+        <a href="{% url 'users:user_edit' user_obj.pk %}" class="btn btn-warning">
+            <i class="bi bi-pencil"></i> Редактировать
+        </a>
+        {% if user_obj.pk != request.user.pk %}
+<a href="{% url 'users:user_delete' user_obj.pk %}" class="btn btn-danger">
+    <i class="bi bi-trash"></i> Удалить
+</a>
+{% endif %}
+    </div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Аватар</h5>
+            </div>
+            <div class="card-body text-center">
+                {% if user_obj.avatar %}
+                    <img src="{{ user_obj.avatar.url }}" alt="Avatar" class="img-fluid rounded-circle mb-3" style="max-width: 200px;">
+                {% else %}
+                    <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 150px; height: 150px; font-size: 64px;">
+                        {{ user_obj.first_name|first|default:user_obj.email|first|upper }}
+                    </div>
+                {% endif %}
+
+                <h5>{{ user_obj.get_full_name|default:user_obj.email }}</h5>
+                <p class="text-muted">{{ user_obj.get_role_display }}</p>
+
+                <div class="mt-2">
+                    <span class="badge {% if user_obj.is_approved %}bg-success{% else %}bg-warning{% endif %}">
+                        {% if user_obj.is_approved %}Подтвержден{% else %}Ожидает подтверждения{% endif %}
+                    </span>
+                    <span class="badge {% if user_obj.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                        {% if user_obj.is_active %}Активен{% else %}Неактивен{% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Информация о пользователе</h5>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <tr>
+                        <th style="width: 30%">Email:</th>
+                        <td>{{ user_obj.email }}</td>
+                    </tr>
+                    <tr>
+                        <th>Имя:</th>
+                        <td>{{ user_obj.first_name|default:"—" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Фамилия:</th>
+                        <td>{{ user_obj.last_name|default:"—" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Роль:</th>
+                        <td>{{ user_obj.get_role_display }}</td>
+                    </tr>
+                    <tr>
+                        <th>Участок/Цех:</th>
+                        <td>{{ user_obj.department|default:"—" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Телефон:</th>
+                        <td>{{ user_obj.phone_number|default:"—" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Город:</th>
+                        <td>{{ user_obj.city|default:"—" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Дата регистрации:</th>
+                        <td>{{ user_obj.date_joined|date:"d.m.Y H:i" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Последний вход:</th>
+                        <td>{{ user_obj.last_login|date:"d.m.Y H:i"|default:"—" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Статус подтверждения:</th>
+                        <td>
+                            {% if user_obj.is_approved %}
+                                <span class="text-success">Подтвержден</span>
+                            {% else %}
+                                <span class="text-warning">Ожидает подтверждения</span>
+                                <a href="{% url 'users:user_approve' user_obj.pk %}" class="btn btn-sm btn-success ms-2">
+                                    <i class="bi bi-check-lg"></i> Подтвердить
+                                </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Активен:</th>
+                        <td>
+                            {% if user_obj.is_active %}
+                                <span class="text-success">Да</span>
+                            {% else %}
+                                <span class="text-danger">Нет</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        {% if user_obj.role == 'production_worker' or user_obj.role == 'production_master' %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">Задания на сборку</h5>
+            </div>
+            <div class="card-body">
+                {% with tasks=user_obj.assembly_tasks.all %}
+                    {% if tasks %}
+                        <ul class="list-group">
+                            {% for task in tasks|slice:":5" %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <a href="{% url 'production:task_detail' task.pk %}">
+                                    {{ task.number }} - {{ task.product.name }}
+                                </a>
+                                <span class="badge {% if task.status == 'completed' %}bg-success{% elif task.status == 'in_progress' %}bg-primary{% else %}bg-secondary{% endif %}">
+                                    {{ task.get_status_display }}
+                                </span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">Нет заданий</p>
+                    {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

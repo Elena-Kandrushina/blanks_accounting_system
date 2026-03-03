@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Удаление пользователя - Система учета{% endblock %}
+
+{% block page_title %}Удаление пользователя{% endblock %}
+
+{% block page_actions %}
+    <a href="{% url 'users:user_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Назад к списку
+    </a>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">Подтверждение удаления</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    {% if user_obj.avatar %}
+                        <img src="{{ user_obj.avatar.url }}" alt="Avatar" class="rounded-circle mb-3" style="width: 100px; height: 100px; object-fit: cover;">
+                    {% else %}
+                        <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 100px; height: 100px; font-size: 36px;">
+                            {{ user_obj.first_name|first|default:user_obj.email|first|upper }}
+                        </div>
+                    {% endif %}
+
+                    <h4>{{ user_obj.get_full_name|default:user_obj.email }}</h4>
+                    <p class="text-muted">{{ user_obj.get_role_display }}</p>
+
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle fs-4 d-block mb-2"></i>
+                        <strong>Внимание!</strong> Вы собираетесь удалить пользователя.
+                        <br>Это действие <strong>необратимо</strong>.
+                    </div>
+
+                    <div class="text-start bg-light p-3 rounded">
+                        <p><strong>Email:</strong> {{ user_obj.email }}</p>
+                        <p><strong>Имя:</strong> {{ user_obj.first_name|default:"—" }}</p>
+                        <p><strong>Фамилия:</strong> {{ user_obj.last_name|default:"—" }}</p>
+                        <p><strong>Роль:</strong> {{ user_obj.get_role_display }}</p>
+                        <p><strong>Участок:</strong> {{ user_obj.department|default:"—" }}</p>
+                        <p><strong>Статус:</strong>
+                            {% if user_obj.is_approved %}
+                                <span class="badge bg-success">Подтвержден</span>
+                            {% else %}
+                                <span class="badge bg-warning">Ожидает</span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Активен:</strong>
+                            {% if user_obj.is_active %}
+                                <span class="badge bg-success">Да</span>
+                            {% else %}
+                                <span class="badge bg-danger">Нет</span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Дата регистрации:</strong> {{ user_obj.date_joined|date:"d.m.Y H:i" }}</p>
+                    </div>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> Да, удалить пользователя
+                        </button>
+                        <a href="{% url 'users:user_list' %}" class="btn btn-outline-secondary">
+                            Отмена
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

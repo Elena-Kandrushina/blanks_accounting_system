@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Отчет {{ report.number }} - Система учета{% endblock %}
+
+{% block page_title %}Отчет о сборке: {{ report.number }}{% endblock %}
+
+{% block page_actions %}
+    <div class="btn-group">
+        <a href="{% url 'production:report_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Назад
+        </a>
+        <a href="{% url 'products:product_detail' report.product.pk %}" class="btn btn-info">
+            <i class="bi bi-box"></i> К изделию
+        </a>
+        {% if user.role == 'admin' %}
+        <a href="{% url 'production:report_delete' report.pk %}" class="btn btn-danger">
+            <i class="bi bi-trash"></i> Удалить
+        </a>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Детали отчета о сборке</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th style="width: 30%">Номер отчета:</th>
+                        <td><strong>{{ report.number }}</strong></td>
+                    </tr>
+                    <tr>
+                        <th>Дата отчета:</th>
+                        <td>{{ report.report_date|date:"d.m.Y" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Изделие:</th>
+                        <td>
+                            <a href="{% url 'products:product_detail' report.product.pk %}">
+                                {{ report.product.article }} - {{ report.product.name }}
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Участок:</th>
+                        <td>
+                            <a href="{% url 'production:site_detail' report.production_site.pk %}">
+                                {{ report.production_site.code }} - {{ report.production_site.name }}
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Собрано изделий:</th>
+                        <td><span class="fw-bold fs-5">{{ report.quantity }} шт.</span></td>
+                    </tr>
+                    <tr>
+                        <th>Брак:</th>
+                        <td>
+                            {% if report.defect_quantity > 0 %}
+                                <span class="text-danger fw-bold">{{ report.defect_quantity }} шт.</span>
+                            {% else %}
+                                0
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Собрал:</th>
+                        <td>{{ report.produced_by.get_full_name|default:report.produced_by.email }}</td>
+                    </tr>
+                    <tr>
+                        <th>Комментарий:</th>
+                        <td>{{ report.comment|default:"—"|linebreaks }}</td>
+                    </tr>
+                    <tr>
+                        <th>Дата создания:</th>
+                        <td>{{ report.created_at|date:"d.m.Y H:i" }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0">Списание заготовок</h5>
+    </div>
+    <div class="card-body">
+        <p>При создании отчета были списаны следующие заготовки:</p>
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Заготовка</th>
+                        <th>Количество на изделие</th>
+                        <th>Всего списано</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in consumed_blanks %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'blanks:blank_detail' item.blank.pk %}">
+                                {{ item.blank.article }} - {{ item.blank.name }}
+                            </a>
+                        </td>
+                        <td>{{ item.per_unit }} {{ item.unit }}</td>
+                        <td><strong>{{ item.total }} {{ item.unit }}</strong></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center text-muted">
+                            Нет норм расхода для данного изделия
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="table-secondary">
+                    <tr>
+                        <th colspan="2">Всего заготовок списано:</th>
+                        <th>{{ total_blanks_consumed|floatformat:0 }} шт</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+    </div>
+</div>
+{% endblock %}

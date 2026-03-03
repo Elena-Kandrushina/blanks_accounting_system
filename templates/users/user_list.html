@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Пользователи - Система учета{% endblock %}
+
+{% block page_title %}Управление пользователями{% endblock %}
+
+{% block page_actions %}
+    <div class="btn-group">
+        <a href="{% url 'users:user_bulk_approve' %}" class="btn btn-success" onclick="return confirm('Подтвердить всех неподтвержденных пользователей?')">
+            <i class="bi bi-check-all"></i> Подтвердить всех
+        </a>
+    </div>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-md-8">
+        <form method="get" class="row g-2">
+            <div class="col-md-4">
+                <input type="text" name="search" class="form-control" placeholder="Поиск..." value="{{ current_filters.search }}">
+            </div>
+            <div class="col-md-3">
+                <select name="role" class="form-select">
+                    <option value="">Все роли</option>
+                    {% for value, label in role_choices %}
+                    <option value="{{ value }}" {% if current_filters.role == value %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="approved" class="form-select">
+                    <option value="">Все статусы</option>
+                    <option value="approved" {% if current_filters.approved == 'approved' %}selected{% endif %}>Подтвержденные</option>
+                    <option value="pending" {% if current_filters.approved == 'pending' %}selected{% endif %}>Ожидают подтверждения</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-funnel"></i> Фильтр
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Email</th>
+                <th>Имя</th>
+                <th>Фамилия</th>
+                <th>Роль</th>
+                <th>Участок/Цех</th>
+                <th>Статус</th>
+                <th>Активен</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user_obj in users %}
+            <tr>
+                <td><strong>{{ user_obj.email }}</strong></td>
+                <td>{{ user_obj.first_name|default:"—" }}</td>
+                <td>{{ user_obj.last_name|default:"—" }}</td>
+                <td>{{ user_obj.get_role_display }}</td>
+                <td>{{ user_obj.department|default:"—" }}</td>
+                <td>
+                    {% if user_obj.is_approved %}
+                        <span class="badge bg-success">Подтвержден</span>
+                    {% else %}
+                        <span class="badge bg-warning">Ожидает</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if user_obj.is_active %}
+                        <span class="badge bg-success">Да</span>
+                    {% else %}
+                        <span class="badge bg-danger">Нет</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <a href="{% url 'users:user_detail' user_obj.pk %}" class="btn btn-info" title="Просмотр">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <a href="{% url 'users:user_edit' user_obj.pk %}" class="btn btn-warning" title="Редактировать">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        {% if not user_obj.is_approved %}
+                        <a href="{% url 'users:user_approve' user_obj.pk %}" class="btn btn-success" title="Подтвердить">
+                            <i class="bi bi-check-lg"></i>
+                        </a>
+                        {% endif %}
+                        <!-- Кнопка удаления (только для администраторов(нельзя удалить самого себяя)) -->
+                        {% if user_obj.pk != request.user.pk %}
+                        <a href="{% url 'users:user_delete' user_obj.pk %}" class="btn btn-danger" title="Удалить">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" class="text-center py-4">
+                    <i class="bi bi-people fs-1 d-block text-muted"></i>
+                    <p class="text-muted">Пользователи не найдены</p>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% include 'includes/pagination.html' %}
+{% endblock %}

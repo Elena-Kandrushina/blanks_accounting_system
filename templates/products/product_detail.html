@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ product.article }} - {{ product.name }} - Система учета{% endblock %}
+
+{% block page_title %}{{ product.article }} - {{ product.name }}{% endblock %}
+
+{% block page_actions %}
+    <div class="btn-group">
+        <a href="{% url 'products:product_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Назад
+        </a>
+        {% if user.role == 'admin' or user.role == 'technologist' %}
+        <a href="{% url 'products:product_edit' product.pk %}" class="btn btn-warning">
+            <i class="bi bi-pencil"></i> Редактировать
+        </a>
+        <a href="{% url 'products:norm_create' %}?product={{ product.pk }}" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Добавить норму
+        </a>
+        {% endif %}
+        {% if user.role == 'admin' %}
+        <a href="{% url 'products:product_delete' product.pk %}" class="btn btn-danger">
+            <i class="bi bi-trash"></i> Удалить
+        </a>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Основная информация</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th style="width: 30%">Артикул:</th>
+                        <td><strong>{{ product.article }}</strong></td>
+                    </tr>
+                    <tr>
+                        <th>Наименование:</th>
+                        <td>{{ product.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Категория:</th>
+                        <td>
+                            {% if product.category %}
+                                {{ product.category.name }}
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Статус:</th>
+                        <td>
+                            {% if product.is_active %}
+                                <span class="badge bg-success">Активно</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Неактивно</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Дата создания:</th>
+                        <td>{{ product.created_at|date:"d.m.Y H:i" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Последнее обновление:</th>
+                        <td>{{ product.updated_at|date:"d.m.Y H:i" }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        {% if product.drawing %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Чертеж</h5>
+            </div>
+            <div class="card-body">
+                <a href="{{ product.drawing.url }}" target="_blank" class="btn btn-outline-primary">
+                    <i class="bi bi-file-earmark-pdf"></i> Скачать чертеж
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Описание</h5>
+            </div>
+            <div class="card-body">
+                {% if product.description %}
+                    {{ product.description|linebreaks }}
+                {% else %}
+                    <p class="text-muted">Описание отсутствует</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Состав изделия (нормы расхода)</h5>
+                {% if user.role == 'admin' or user.role == 'technologist' %}
+                <a href="{% url 'products:norm_create' %}?product={{ product.pk }}" class="btn btn-sm btn-success">
+                    <i class="bi bi-plus"></i> Добавить
+                </a>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if norms %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Заготовка</th>
+                                    <th>Количество</th>
+                                    <th>Ед. изм.</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for norm in norms %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'blanks:blank_detail' norm.blank.pk %}">
+                                            {{ norm.blank.article }} - {{ norm.blank.name }}
+                                        </a>
+                                    </td>
+                                    <td><strong>{{ norm.quantity }}</strong></td>
+                                    <td>{{ norm.blank.unit }}</td>
+                                    <td>
+    <div class="btn-group btn-group-sm">
+        <a href="{% url 'products:norm_detail' norm.pk %}" class="btn btn-info" title="Просмотр">
+            <i class="bi bi-eye"></i>
+        </a>
+        <a href="{% url 'products:norm_edit' norm.pk %}" class="btn btn-warning" title="Редактировать">
+            <i class="bi bi-pencil"></i>
+        </a>
+        <a href="{% url 'products:norm_delete' norm.pk %}" class="btn btn-danger" title="Удалить">
+            <i class="bi bi-trash"></i>
+        </a>
+    </div>
+</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="table-secondary">
+                                <tr>
+                                    <th colspan="4">Всего заготовок: {{ norms.count }}</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center py-3">
+                        <i class="bi bi-info-circle fs-1 d-block"></i>
+                        Нормы расхода не заданы
+                    </p>
+                    {% if user.role == 'admin' or user.role == 'technologist' %}
+                    <div class="text-center">
+                        <a href="{% url 'products:norm_create' %}?product={{ product.pk }}" class="btn btn-success">
+    <i class="bi bi-plus-circle"></i> Добавить норму
+</a>
+                    </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+
+
+    </div>
+</div>
+{% endblock %}

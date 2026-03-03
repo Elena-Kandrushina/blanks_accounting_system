@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Производственные участки - Система учета{% endblock %}
+
+{% block page_title %}Производственные участки{% endblock %}
+
+{% block page_actions %}
+    {% if user.role == 'admin' %}
+    <a href="{% url 'production:site_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus"></i> Добавить участок
+    </a>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-md-6">
+        <form method="get" class="d-flex">
+            <input type="text" name="search" class="form-control me-2" placeholder="Поиск по названию или коду..." value="{{ request.GET.search|default:'' }}">
+            <button type="submit" class="btn btn-outline-primary">
+                <i class="bi bi-search"></i> Найти
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    {% for site in sites %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 {% if not site.is_active %}bg-light{% endif %}">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">{{ site.code }}</h5>
+                <div>
+                    {% if not site.is_active %}
+                        <span class="badge bg-secondary">Неактивен</span>
+                    {% endif %}
+                    {% if user.role == 'admin' %}
+    <a href="{% url 'production:site_delete' site.pk %}" class="btn btn-sm btn-danger ms-2">
+        <i class="bi bi-trash"></i> УДАЛИТЬ
+    </a>
+{% endif %}
+                </div>
+            </div>
+            <div class="card-body">
+                <h6 class="card-title">{{ site.name }}</h6>
+
+                <div class="mt-3">
+                    <p class="mb-1">
+                        <strong>Привязанный склад:</strong><br>
+                        {% if site.warehouse %}
+                            <a href="{% url 'warehouse:warehouse_detail' site.warehouse.pk %}" class="text-decoration-none">
+                                <i class="bi bi-building"></i> {{ site.warehouse.code }} - {{ site.warehouse.name }}
+                            </a>
+                        {% else %}
+                            <span class="text-muted">
+                                <i class="bi bi-building-slash"></i> Не привязан
+                            </span>
+                        {% endif %}
+                    </p>
+
+                    <!-- Доп инфо о складе (если привязан) -->
+                    {% if site.warehouse %}
+                        {% with balances=site.warehouse.balances.all %}
+                            {% if balances %}
+                            <div class="mt-2 small text-muted">
+                                <i class="bi bi-boxes"></i>
+                                {{ balances|length }} позиций на складе
+                            </div>
+                            {% endif %}
+                        {% endwith %}
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-footer bg-transparent">
+                <div class="btn-group w-100">
+                    <a href="{% url 'production:site_detail' site.pk %}" class="btn btn-outline-primary">
+                        <i class="bi bi-eye"></i> Подробнее
+                    </a>
+                    {% if user.role == 'admin' %}
+                    <a href="{% url 'production:site_edit' site.pk %}" class="btn btn-outline-warning">
+                        <i class="bi bi-pencil"></i> Редактировать
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-5">
+        <i class="bi bi-geo-alt fs-1 d-block text-muted"></i>
+        <p class="text-muted">Производственные участки не найдены</p>
+        {% if user.role == 'admin' %}
+        <a href="{% url 'production:site_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus"></i> Создать первый участок
+        </a>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+{% include 'includes/pagination.html' %}
+{% endblock %}

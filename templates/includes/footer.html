@@ -1,0 +1,14 @@
+<footer class="bg-light py-3 mt-auto">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-6 text-muted">
+                <small>© {% now "Y" %} Система учета заготовок | Версия 2.0</small>
+            </div>
+            <div class="col-md-6 text-end text-muted">
+                {% if user.is_authenticated %}
+                <small>Вы вошли как: <strong>{{ user.get_full_name|default:user.email }}</strong> ({{ user.get_role_display }})</small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</footer>

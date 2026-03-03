@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if object %}Редактирование{% else %}Создание{% endif %} пользователя - Система учета{% endblock %}
+
+{% block page_title %}
+    {% if object %}Редактирование пользователя: {{ object.email }}{% else %}Создание нового пользователя{% endif %}
+{% endblock %}
+
+{% block page_actions %}
+    <a href="{% url 'users:user_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Назад
+    </a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                    {% endif %}
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email <span class="text-danger">*</span></label>
+                            <input type="email" name="email" class="form-control {% if form.email.errors %}is-invalid{% endif %}" value="{{ form.email.value|default:object.email }}" required>
+                            {% if form.email.errors %}
+                            <div class="invalid-feedback">{{ form.email.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Роль <span class="text-danger">*</span></label>
+                            <select name="role" class="form-select {% if form.role.errors %}is-invalid{% endif %}">
+                                {% for value, label in form.role.field.choices %}
+                                <option value="{{ value }}" {% if form.role.value == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% if form.role.errors %}
+                            <div class="invalid-feedback">{{ form.role.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Имя</label>
+                            <input type="text" name="first_name" class="form-control {% if form.first_name.errors %}is-invalid{% endif %}" value="{{ form.first_name.value|default:object.first_name }}">
+                            {% if form.first_name.errors %}
+                            <div class="invalid-feedback">{{ form.first_name.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Фамилия</label>
+                            <input type="text" name="last_name" class="form-control {% if form.last_name.errors %}is-invalid{% endif %}" value="{{ form.last_name.value|default:object.last_name }}">
+                            {% if form.last_name.errors %}
+                            <div class="invalid-feedback">{{ form.last_name.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Телефон</label>
+                            <input type="text" name="phone_number" class="form-control {% if form.phone_number.errors %}is-invalid{% endif %}" value="{{ form.phone_number.value|default:object.phone_number }}">
+                            {% if form.phone_number.errors %}
+                            <div class="invalid-feedback">{{ form.phone_number.errors }}</div>
+                            {% endif %}
+                        </div>
+
+
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Участок/Цех</label>
+                        <input type="text" name="department" class="form-control {% if form.department.errors %}is-invalid{% endif %}" value="{{ form.department.value|default:object.department }}">
+                        {% if form.department.errors %}
+                        <div class="invalid-feedback">{{ form.department.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">{{ form.department.help_text }}</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Аватар</label>
+                        {% if object.avatar %}
+                        <div class="mb-2">
+                            <img src="{{ object.avatar.url }}" alt="Current avatar" style="max-height: 100px;">
+                        </div>
+                        {% endif %}
+                        <input type="file" name="avatar" class="form-control {% if form.avatar.errors %}is-invalid{% endif %}">
+                        {% if form.avatar.errors %}
+                        <div class="invalid-feedback">{{ form.avatar.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" name="is_approved" class="form-check-input" id="is_approved" {% if form.is_approved.value %}checked{% endif %}>
+                                <label class="form-check-label" for="is_approved">Подтвержден</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" name="is_active" class="form-check-input" id="is_active" {% if form.is_active.value %}checked{% endif %}>
+                                <label class="form-check-label" for="is_active">Активен</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Сохранить
+                        </button>
+                        <a href="{% url 'users:user_list' %}" class="btn btn-outline-secondary">
+                            Отмена
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
